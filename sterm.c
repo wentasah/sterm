@@ -1,10 +1,5 @@
 /*
- * Simple terminal
- *
- * This is a minimalist terminal program like minicom or cu. The only
- * thing it does is creating a bidirectional connection between
- * stdin/stdout and a device (e.g. serial terminal). It can also set
- * serial line baudrate and manipulate DTR/RTS modem lines.
+ * Simple serial terminal
  *
  * Copyright 2014 Michal Sojka <sojkam1@fel.cvut.cz>
  *
@@ -21,6 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * This is a minimalist terminal program like minicom or cu. The only
+ * thing it does is creating a bidirectional connection between
+ * stdin/stdout and a device (e.g. serial terminal). It can also set
+ * serial line baudrate and manipulate DTR/RTS modem lines.
+ *
+ * The -d and -r option create short pulse on DTR/RTS. The lines are
+ * always raised when the device is opened and those options lower the
+ * lines immediately after opening.
  */
 
 #define _BSD_SOURCE
@@ -64,7 +70,23 @@ void restore_stdin_term()
 
 void sighandler(int arg)
 {
-	exit(0);
+	exit(0); /* Invoke exit handlers */
+}
+
+int dtr_rts_arg(const char option)
+{
+	int val = -1;
+
+	if (optarg) {
+		switch (optarg[0]) {
+		case '+': val = +1; break;
+		case '-': val = -1; break;
+		default:
+			fprintf(stderr, "Unknown -%c argument: %s", option, optarg);
+			exit(1);
+		}
+	}
+	return val;
 }
 
 
@@ -74,7 +96,6 @@ int main(int argc, char *argv[])
 	char *dev = NULL;
 	int opt;
 	speed_t speed = 0;
-	int ret;
 	int dtr = 0, rts = 0;
 	struct termios tio;
 	bool stdin_tty;
@@ -85,16 +106,11 @@ int main(int argc, char *argv[])
 		atexit(restore_stdin_term);
 	}
 
-	while ((opt = getopt(argc, argv, "ndrs:v")) != -1) {
+	while ((opt = getopt(argc, argv, "nd::r::s:v")) != -1) {
 		switch (opt) {
-		case 'd':
-			dtr = 1;
-			break;
-		case 'n':
-			raw = false;
-		case 'r':
-			rts = 1;
-			break;
+		case 'd': dtr = dtr_rts_arg(opt); break;
+		case 'n': raw = false; break;
+		case 'r': rts = dtr_rts_arg(opt); break;
 		case 's': {
 			int s = atoi(optarg);
 			switch (s) {
@@ -185,13 +201,13 @@ int main(int argc, char *argv[])
 
 		if (dtr || rts) {
 			int status;
-			tio.c_cflag &= ~HUPCL;
+			/* tio.c_cflag &= ~HUPCL; */ /* Don't lower DTR/RTS on close */
 
 			CHECK(ioctl(fd, TIOCMGET, &status));
-			if (dtr == +1) status &= ~TIOCM_DTR;
-			if (dtr == -1) status |=  TIOCM_DTR;
-			if (rts == +1) status &= ~TIOCM_RTS;
-			if (rts == -1) status |=  TIOCM_RTS;
+			if (dtr == -1) status &= ~TIOCM_DTR;
+			if (dtr == +1) status |=  TIOCM_DTR;
+			if (rts == -1) status &= ~TIOCM_RTS;
+			if (rts == +1) status |=  TIOCM_RTS;
 			CHECK(ioctl(fd, TIOCMSET, &status));
 		}
 
@@ -217,7 +233,7 @@ int main(int argc, char *argv[])
 	VERBOSE("Connected.\n");
 	while (1) {
 		int r1, r2;
-		ret = CHECK(poll(fds, 2, -1));
+		CHECK(poll(fds, 2, -1));
 		if (fds[0].revents & POLLIN) {
 			r1 = CHECK(read(0, buf, sizeof(buf)));
 			if (r1 == 0) {
