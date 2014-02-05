@@ -174,9 +174,21 @@ int main(int argc, char *argv[])
 		CHECK(write(tmp, pid, strlen(pid)));
 		close(tmp);
 		snprintf(lockfile, sizeof(lockfile), "/var/lock/LCK..%s", dev + 5);
+	retry:
 		if (link(template, lockfile) == -1) {
-			perror(lockfile);
-			exit(1);
+			tmp = CHECK(open(lockfile, O_RDONLY));
+			CHECK(read(tmp, pid, sizeof(pid)));
+			close(tmp);
+			int p = atoi(pid);
+			char proc[50];
+			snprintf(proc, sizeof(proc), "/proc/%d", p);
+			if (access(proc, F_OK) == 0) {
+				fprintf(stderr, "%s is used by PID %d\n", dev, p);
+				exit(1);
+			}
+			fprintf(stderr, "Stale lock file %s (PID %d) - removing it!\n", lockfile, p);
+			CHECK(unlink(lockfile));
+			goto retry;
 		}
 		rm_file(0, template);
 		on_exit(rm_file, lockfile);
