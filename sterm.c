@@ -106,6 +106,17 @@ void exit_on_escapeseq(const char *buf, int len)
 	}
 }
 
+void usage(const char* argv0)
+{
+	fprintf(stderr, "Usage: %s [options] <device>\n", argv0);
+	fprintf(stderr, "Options:\n");
+	fprintf(stderr, "  -d [+|-] create short positive/negative pulse on DTR\n");
+	fprintf(stderr, "  -e       ignore '~.' escape sequence\n");
+	fprintf(stderr, "  -n       do not switch the device to raw mode\n");
+	fprintf(stderr, "  -r [+|-] create short positive/negative pulse on RTS\n");
+	fprintf(stderr, "  -s <baudrate>\n");
+	fprintf(stderr, "  -v       verbose\n");
+}
 
 int main(int argc, char *argv[])
 {
@@ -163,7 +174,7 @@ int main(int argc, char *argv[])
 			verbose = true;
 			break;
 		default: /* '?' */
-			fprintf(stderr, "Usage: %s [-s baudrate] [-v] <device>\n", argv[0]);
+			usage(argv[0]);
 			exit(1);
 		}
 	}
@@ -173,6 +184,7 @@ int main(int argc, char *argv[])
 
 	if (!dev) {
 		fprintf(stderr, "No device specified\n");
+		usage(argv[0]);
 		exit(1);
 	}
 
