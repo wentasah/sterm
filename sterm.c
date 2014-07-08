@@ -47,7 +47,7 @@
 #define CHECK(cmd) ({ int ret = (cmd); if (ret == -1) { perror(#cmd " line " TOSTRING(__LINE__)); exit(1); }; ret; })
 #define CHECKPTR(cmd) ({ void *ptr = (cmd); if (ptr == (void*)-1) { perror(#cmd " line " TOSTRING(__LINE__)); exit(1); }; ptr; })
 
-#define VERBOSE(format, ...) do { if (verbose) fprintf(stderr, format, ##__VA_ARGS__); } while (0)
+#define VERBOSE(format, ...) do { if (verbose) fprintf(stderr, "sterm: " format, ##__VA_ARGS__); } while (0)
 
 bool verbose = false;
 bool exit_on_escape = true;
@@ -272,14 +272,17 @@ int main(int argc, char *argv[])
 		CHECK(tcsetattr(0, TCSANOW, &tio));
 	}
 
-	VERBOSE("Connected.\n");
+	VERBOSE("Connected.\r\n");
+	if (exit_on_escape)
+		VERBOSE("Use '<Enter>~.' sequence to exit.\r\n");
+
 	while (1) {
 		int r1, r2;
 		CHECK(poll(fds, 2, -1));
 		if (fds[0].revents & POLLIN) {
 			r1 = CHECK(read(0, buf, sizeof(buf)));
 			if (r1 == 0) {
-				VERBOSE("EOF on stdin\n");
+				VERBOSE("EOF on stdin\r\n");
 				break;
 			}
 			if (exit_on_escape)
@@ -293,7 +296,7 @@ int main(int argc, char *argv[])
 		if (fds[1].revents & POLLIN) {
 			r1 = CHECK(read(fd, buf, sizeof(buf)));
 			if (r1 == 0) {
-				VERBOSE("EOF on %s\n", dev);
+				VERBOSE("EOF on %s\r\n", dev);
 				break;
 			}
 			r2 = CHECK(write(1, buf, r1));
