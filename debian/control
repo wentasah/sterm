@@ -1,0 +1,18 @@
+Source: sterm
+Section: comm
+Priority: optional
+Maintainer: Michal Sojka <sojkam1@fel.cvut.cz>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.5
+Homepage: https://rtime.felk.cvut.cz/gitweb/sojka/sterm.git
+Vcs-Git: git://rtime.felk.cvut.cz/sojka/sterm.git
+Vcs-Browser: https://rtime.felk.cvut.cz/gitweb/sojka/sterm.git
+
+Package: sterm
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Simple serial terminal
+ This is a minimalist terminal program like minicom or cu. The only
+ thing it does is creating a bidirectional connection between
+ stdin/stdout and a device (e.g. serial terminal). It can also set
+ serial line baudrate and manipulate DTR/RTS modem lines.
