@@ -50,6 +50,7 @@
 #define VERBOSE(format, ...) do { if (verbose) fprintf(stderr, format, ##__VA_ARGS__); } while (0)
 
 bool verbose = false;
+bool exit_on_escape = true;
 
 char template[] = "/var/lock/TMPXXXXXX";
 char lockfile[100];
@@ -89,6 +90,22 @@ int dtr_rts_arg(const char option)
 	return val;
 }
 
+void exit_on_escapeseq(const char *buf, int len)
+{
+	static const char escseq[] = "\r~.";
+	static const char *state = escseq+1;
+	int i;
+
+	for (i = 0; i < len; i++) {
+		if (buf[i] == *state) {
+			state++;
+			if (*state == 0)
+				exit(0);
+		} else
+			state = escseq;
+	}
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -106,9 +123,10 @@ int main(int argc, char *argv[])
 		atexit(restore_stdin_term);
 	}
 
-	while ((opt = getopt(argc, argv, "nd::r::s:v")) != -1) {
+	while ((opt = getopt(argc, argv, "nd::er::s:v")) != -1) {
 		switch (opt) {
 		case 'd': dtr = dtr_rts_arg(opt); break;
+		case 'e': exit_on_escape = false; break;
 		case 'n': raw = false; break;
 		case 'r': rts = dtr_rts_arg(opt); break;
 		case 's': {
@@ -252,6 +270,8 @@ int main(int argc, char *argv[])
 				VERBOSE("EOF on stdin\n");
 				break;
 			}
+			if (exit_on_escape)
+				exit_on_escapeseq(buf, r1);
 			r2 = CHECK(write(fd, buf, r1));
 			if (r1 != r2) {
 				fprintf(stderr, "Not all data written to %s (%d/%d)\n", dev, r1, r2);
