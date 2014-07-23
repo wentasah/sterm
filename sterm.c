@@ -31,6 +31,7 @@
 
 #define _BSD_SOURCE
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -41,6 +42,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <signal.h>
+#include <lockdev.h>
 
 #define STRINGIFY(val) #val
 #define TOSTRING(val) STRINGIFY(val)
@@ -52,9 +54,8 @@
 bool verbose = false;
 bool exit_on_escape = true;
 
-char template[] = "/var/lock/TMPXXXXXX";
-char lockfile[100];
 struct termios stdin_tio_backup;
+char *dev = NULL;
 
 void rm_file(int status, void *arg)
 {
@@ -67,6 +68,11 @@ void rm_file(int status, void *arg)
 void restore_stdin_term()
 {
 	tcsetattr(0, TCSANOW, &stdin_tio_backup);
+}
+
+void unlock()
+{
+	dev_unlock(dev, getpid());
 }
 
 void sighandler(int arg)
@@ -121,7 +127,6 @@ void usage(const char* argv0)
 int main(int argc, char *argv[])
 {
 	int fd;
-	char *dev = NULL;
 	int opt;
 	speed_t speed = 0;
 	int dtr = 0, rts = 0;
@@ -192,37 +197,15 @@ int main(int argc, char *argv[])
 	signal(SIGTERM, sighandler);
 	signal(SIGHUP, sighandler);
 
-	if (strncmp(dev, "/dev/", 5) == 0 &&
-	    strrchr(dev, '/') == dev + 4 &&
-	    dev[5] != 0)
-	{ /* Create lock file (to be inter-operable with other programs) */
-		/* This is racy, but what we can do - see also comments in uucp / cu */
-		int tmp = CHECK(mkstemp(template));
-		on_exit(rm_file, template);
-	        char pid[20];
-		snprintf(pid, sizeof(pid), "%u", getpid());
-		CHECK(write(tmp, pid, strlen(pid)));
-		close(tmp);
-		snprintf(lockfile, sizeof(lockfile), "/var/lock/LCK..%s", dev + 5);
-	retry:
-		if (link(template, lockfile) == -1) {
-			tmp = CHECK(open(lockfile, O_RDONLY));
-			CHECK(read(tmp, pid, sizeof(pid)));
-			close(tmp);
-			int p = atoi(pid);
-			char proc[50];
-			snprintf(proc, sizeof(proc), "/proc/%d", p);
-			if (access(proc, F_OK) == 0) {
-				fprintf(stderr, "%s is used by PID %d\n", dev, p);
-				exit(1);
-			}
-			fprintf(stderr, "Stale lock file %s (PID %d) - removing it!\n", lockfile, p);
-			CHECK(unlink(lockfile));
-			goto retry;
-		}
-		rm_file(0, template);
-		on_exit(rm_file, lockfile);
+	pid_t pid = dev_lock(dev);
+	if (pid > 0) {
+		fprintf(stderr, "%s is used by PID %d\n", dev, pid);
+		exit(1);
+	} else if (pid < 0) {
+		perror("dev_lock()");
+		exit(1);
 	}
+	atexit(unlock);
 
 	if ((fd = open(dev, O_RDWR)) < 0) {
 		perror(dev);
