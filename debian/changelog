@@ -1,3 +1,9 @@
+sterm (20140723) unstable; urgency=medium
+
+  * Use liblockdev to lock the tty device
+
+ -- Michal Sojka <sojkam1@fel.cvut.cz>  Wed, 23 Jul 2014 18:50:00 +0200
+
 sterm (20140708) unstable; urgency=low
 
   * Initial Release.
