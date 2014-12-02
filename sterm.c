@@ -101,14 +101,16 @@ void exit_on_escapeseq(const char *buf, int len)
 	static const char escseq[] = "\r~.";
 	static const char *state = escseq+1;
 	int i;
-
 	for (i = 0; i < len; i++) {
 		if (buf[i] == *state) {
 			state++;
 			if (*state == 0)
 				exit(0);
-		} else
+		} else {
 			state = escseq;
+			if (buf[i] == *state)
+				state++;
+		}
 	}
 }
 
