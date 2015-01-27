@@ -1,3 +1,11 @@
+sterm (20150127) unstable; urgency=medium
+
+  * Fix escape sequence handling
+  * Never block when opening the port
+  * Disable flow control
+
+ -- Michal Sojka <sojkam1@fel.cvut.cz>  Tue, 27 Jan 2015 10:34:57 +0100
+
 sterm (20140723) unstable; urgency=medium
 
   * Use liblockdev to lock the tty device
