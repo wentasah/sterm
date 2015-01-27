@@ -242,7 +242,9 @@ int main(int argc, char *argv[])
 			CHECK(ioctl(fd, TIOCMSET, &status));
 		}
 
-		tio.c_cflag &= ~(CRTSCTS|IXON|IXOFF); /* Disable flow control */
+		 /* Disable flow control */
+		tio.c_cflag &= ~(CRTSCTS);
+		tio.c_iflag &= ~(IXON|IXOFF);
 
 		CHECK(tcsetattr(fd, TCSANOW, &tio));
 	} else if (speed || dtr || rts) {
