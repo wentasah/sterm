@@ -242,6 +242,8 @@ int main(int argc, char *argv[])
 			CHECK(ioctl(fd, TIOCMSET, &status));
 		}
 
+		tio.c_cflag &= ~(CRTSCTS|IXON|IXOFF); /* Disable flow control */
+
 		CHECK(tcsetattr(fd, TCSANOW, &tio));
 	} else if (speed || dtr || rts) {
 		fprintf(stderr, "Cannot set speed, DTR or RTS on non-terminal %s\n", dev);
