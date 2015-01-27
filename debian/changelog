@@ -1,3 +1,9 @@
+sterm (20150127a) unstable; urgency=medium
+
+  * Fix disabling of flow control
+
+ -- Michal Sojka <sojkam1@fel.cvut.cz>  Tue, 27 Jan 2015 11:12:14 +0100
+
 sterm (20150127) unstable; urgency=medium
 
   * Fix escape sequence handling
