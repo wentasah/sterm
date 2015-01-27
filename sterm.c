@@ -1,7 +1,7 @@
 /*
  * Simple serial terminal
  *
- * Copyright 2014 Michal Sojka <sojkam1@fel.cvut.cz>
+ * Copyright 2014, 2015 Michal Sojka <sojkam1@fel.cvut.cz>
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -209,10 +209,14 @@ int main(int argc, char *argv[])
 	}
 	atexit(unlock);
 
-	if ((fd = open(dev, O_RDWR)) < 0) {
+	/* O_NONBLOCK is needed to not wait for the CDC signal. See tty_ioctl(4). */
+	if ((fd = open(dev, O_RDWR|O_NOCTTY|O_NONBLOCK)) < 0) {
 		perror(dev);
 		exit(1);
 	}
+        /* Cancel the efect of O_NONBLOCK flag. */
+	int n = fcntl(fd, F_GETFL, 0);
+        fcntl(fd, F_SETFL, n & ~O_NDELAY);
 
 	if (isatty(fd)) {
 		CHECK(ioctl(fd, TIOCEXCL, NULL));
