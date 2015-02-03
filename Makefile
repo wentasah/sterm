@@ -3,6 +3,9 @@ LDFLAGS = -llockdev
 
 all: sterm
 
+%: %.c
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
 clean:
 	rm -f sterm
 
