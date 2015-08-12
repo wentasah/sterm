@@ -1,3 +1,10 @@
+sterm (20150821) unstable; urgency=medium
+
+  * Fix Makefile to work on Ubuntu Precise
+  * Allow specifying DTR/RTS pulse length
+
+ -- Michal Sojka <sojkam1@fel.cvut.cz>  Wed, 12 Aug 2015 12:52:32 +0200
+
 sterm (20150127a) unstable; urgency=medium
 
   * Fix disabling of flow control
