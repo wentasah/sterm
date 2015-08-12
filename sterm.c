@@ -85,12 +85,17 @@ int dtr_rts_arg(const char option)
 	int val = -1;
 
 	if (optarg) {
-		switch (optarg[0]) {
-		case '+': val = +1; break;
-		case '-': val = -1; break;
-		default:
-			fprintf(stderr, "Unknown -%c argument: %s", option, optarg);
-			exit(1);
+		char *end;
+		val = strtol(optarg, &end, 10);
+		if (end == optarg) {
+			/* Not a number */
+			switch (optarg[0]) {
+			case '+': val = +1; break;
+			case '-': val = -1; break;
+			default:
+				fprintf(stderr, "Unknown -%c argument: %s", option, optarg);
+				exit(1);
+			}
 		}
 	}
 	return val;
@@ -117,13 +122,19 @@ void exit_on_escapeseq(const char *buf, int len)
 void usage(const char* argv0)
 {
 	fprintf(stderr, "Usage: %s [options] <device>\n", argv0);
-	fprintf(stderr, "Options:\n");
-	fprintf(stderr, "  -d [+|-] create short positive/negative pulse on DTR\n");
-	fprintf(stderr, "  -e       ignore '~.' escape sequence\n");
-	fprintf(stderr, "  -n       do not switch the device to raw mode\n");
-	fprintf(stderr, "  -r [+|-] create short positive/negative pulse on RTS\n");
-	fprintf(stderr, "  -s <baudrate>\n");
-	fprintf(stderr, "  -v       verbose\n");
+	fprintf(stderr,
+		"Options:\n"
+		"  -d[PULSE] make pulse on DTR\n"
+		"  -e        ignore '~.' escape sequence\n"
+		"  -n        do not switch the device to raw mode\n"
+		"  -r[PULSE] make pulse on RTS\n"
+		"  -s <baudrate>\n"
+		"\n"
+		"PULSE is a number specifying the pulse. Absolute value defines the\n"
+		"length of the pulse in milliseconds, sign determines the polarity of\n"
+		"the pulse. Alternatively, PULSE can be either '+' or '-', which\n"
+		"corresponds to +1 or -1.\n"
+		);
 }
 
 int main(int argc, char *argv[])
@@ -231,15 +242,24 @@ int main(int argc, char *argv[])
 		}
 
 		if (dtr || rts) {
-			int status;
+			int status, ms = 0;
 			/* tio.c_cflag &= ~HUPCL; */ /* Don't lower DTR/RTS on close */
 
 			CHECK(ioctl(fd, TIOCMGET, &status));
-			if (dtr == -1) status &= ~TIOCM_DTR;
-			if (dtr == +1) status |=  TIOCM_DTR;
-			if (rts == -1) status &= ~TIOCM_RTS;
-			if (rts == +1) status |=  TIOCM_RTS;
+			if (dtr > 0) { status &= ~TIOCM_DTR; ms = +dtr; }
+			if (dtr < 0) { status |=  TIOCM_DTR; ms = -dtr; }
+			if (rts > 0) { status &= ~TIOCM_RTS; ms = +rts; }
+			if (rts < 0) { status |=  TIOCM_RTS; ms = -rts; }
 			CHECK(ioctl(fd, TIOCMSET, &status));
+
+			usleep(ms*1000);
+
+			if (dtr < 0) { status &= ~TIOCM_DTR; }
+			if (dtr > 0) { status |=  TIOCM_DTR; }
+			if (rts < 0) { status &= ~TIOCM_RTS; }
+			if (rts > 0) { status |=  TIOCM_RTS; }
+			CHECK(ioctl(fd, TIOCMSET, &status));
+
 		}
 
 		 /* Disable flow control */
