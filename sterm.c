@@ -137,6 +137,27 @@ void usage(const char* argv0)
 		);
 }
 
+void pulse(int fd, int dtr, int rts)
+{
+	int status, ms = 0;
+	/* tio.c_cflag &= ~HUPCL; */ /* Don't lower DTR/RTS on close */
+
+	CHECK(ioctl(fd, TIOCMGET, &status));
+	if (dtr > 0) { status &= ~TIOCM_DTR; ms = +dtr; }
+	if (dtr < 0) { status |=  TIOCM_DTR; ms = -dtr; }
+	if (rts > 0) { status &= ~TIOCM_RTS; ms = +rts; }
+	if (rts < 0) { status |=  TIOCM_RTS; ms = -rts; }
+	CHECK(ioctl(fd, TIOCMSET, &status));
+
+	usleep(ms*1000);
+
+	if (dtr < 0) { status &= ~TIOCM_DTR; }
+	if (dtr > 0) { status |=  TIOCM_DTR; }
+	if (rts < 0) { status &= ~TIOCM_RTS; }
+	if (rts > 0) { status |=  TIOCM_RTS; }
+	CHECK(ioctl(fd, TIOCMSET, &status));
+}
+
 int main(int argc, char *argv[])
 {
 	int fd;
@@ -241,26 +262,8 @@ int main(int argc, char *argv[])
 			CHECK(cfsetispeed(&tio, speed));
 		}
 
-		if (dtr || rts) {
-			int status, ms = 0;
-			/* tio.c_cflag &= ~HUPCL; */ /* Don't lower DTR/RTS on close */
-
-			CHECK(ioctl(fd, TIOCMGET, &status));
-			if (dtr > 0) { status &= ~TIOCM_DTR; ms = +dtr; }
-			if (dtr < 0) { status |=  TIOCM_DTR; ms = -dtr; }
-			if (rts > 0) { status &= ~TIOCM_RTS; ms = +rts; }
-			if (rts < 0) { status |=  TIOCM_RTS; ms = -rts; }
-			CHECK(ioctl(fd, TIOCMSET, &status));
-
-			usleep(ms*1000);
-
-			if (dtr < 0) { status &= ~TIOCM_DTR; }
-			if (dtr > 0) { status |=  TIOCM_DTR; }
-			if (rts < 0) { status &= ~TIOCM_RTS; }
-			if (rts > 0) { status |=  TIOCM_RTS; }
-			CHECK(ioctl(fd, TIOCMSET, &status));
-
-		}
+		if (dtr || rts)
+			pulse(fd, dtr, rts);
 
 		 /* Disable flow control */
 		tio.c_cflag &= ~(CRTSCTS);
