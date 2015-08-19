@@ -48,6 +48,7 @@
 #define TOSTRING(val) STRINGIFY(val)
 #define CHECK(cmd) ({ int ret = (cmd); if (ret == -1) { perror(#cmd " line " TOSTRING(__LINE__)); exit(1); }; ret; })
 #define CHECKPTR(cmd) ({ void *ptr = (cmd); if (ptr == (void*)-1) { perror(#cmd " line " TOSTRING(__LINE__)); exit(1); }; ptr; })
+#define CHECKNULL(cmd) ({ void *ptr = (cmd); if (ptr == NULL) { perror(#cmd " line " TOSTRING(__LINE__)); exit(1); }; ptr; })
 
 #define VERBOSE(format, ...) do { if (verbose) fprintf(stderr, "sterm: " format, ##__VA_ARGS__); } while (0)
 
@@ -80,7 +81,7 @@ void sighandler(int arg)
 	exit(0); /* Invoke exit handlers */
 }
 
-int dtr_rts_arg(const char option)
+int dtr_rts_arg(const char option, const char *optarg)
 {
 	int val = -1;
 
@@ -93,7 +94,7 @@ int dtr_rts_arg(const char option)
 			case '+': val = +1; break;
 			case '-': val = -1; break;
 			default:
-				fprintf(stderr, "Unknown -%c argument: %s", option, optarg);
+				fprintf(stderr, "Unknown -%c argument: %s\n", option, optarg);
 				exit(1);
 			}
 		}
@@ -124,6 +125,7 @@ void usage(const char* argv0)
 	fprintf(stderr, "Usage: %s [options] <device>\n", argv0);
 	fprintf(stderr,
 		"Options:\n"
+		"  -c        enter command mode\n"
 		"  -d[PULSE] make pulse on DTR\n"
 		"  -e        ignore '~.' escape sequence\n"
 		"  -n        do not switch the device to raw mode\n"
@@ -158,6 +160,33 @@ void pulse(int fd, int dtr, int rts)
 	CHECK(ioctl(fd, TIOCMSET, &status));
 }
 
+void handle_commands(int fd)
+{
+	char command[100];
+	bool go = false;
+
+	while (!go) {
+		char *p1 = NULL;
+		if (fgets(command, sizeof(command), stdin) == NULL) {
+			if (!feof(stdin))
+			    perror("Command read");
+			exit(1);
+		}
+		if (sscanf(command, "dtr %ms", &p1) == 1)
+			pulse(fd, dtr_rts_arg('d', p1), 0);
+		else if (sscanf(command, "rts %ms", &p1) == 1)
+			pulse(fd, 0, dtr_rts_arg('r', p1));
+		else if (strcmp(command, "go\n") == 0)
+			break;
+		else {
+			fprintf(stderr, "Unknown command: %s\n", command);
+			exit(1);
+		}
+
+		free(p1);
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	int fd;
@@ -167,18 +196,20 @@ int main(int argc, char *argv[])
 	struct termios tio;
 	bool stdin_tty;
 	bool raw = true;
+	bool cmd = false;
 
 	if ((stdin_tty = isatty(0))) {
 		CHECK(tcgetattr(0, &stdin_tio_backup));
 		atexit(restore_stdin_term);
 	}
 
-	while ((opt = getopt(argc, argv, "nd::er::s:v")) != -1) {
+	while ((opt = getopt(argc, argv, "cnd::er::s:v")) != -1) {
 		switch (opt) {
-		case 'd': dtr = dtr_rts_arg(opt); break;
+		case 'c': cmd = true; break;
+		case 'd': dtr = dtr_rts_arg(opt, optarg); break;
 		case 'e': exit_on_escape = false; break;
 		case 'n': raw = false; break;
-		case 'r': rts = dtr_rts_arg(opt); break;
+		case 'r': rts = dtr_rts_arg(opt, optarg); break;
 		case 's': {
 			int s = atoi(optarg);
 			switch (s) {
@@ -275,6 +306,11 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	VERBOSE("Connected.\r\n");
+
+	if (cmd)
+		handle_commands(fd);
+
 	struct pollfd fds[2] = {
 		{ .fd = 0,  .events = POLLIN },
 		{ .fd = fd, .events = POLLIN },
@@ -288,7 +324,6 @@ int main(int argc, char *argv[])
 		CHECK(tcsetattr(0, TCSANOW, &tio));
 	}
 
-	VERBOSE("Connected.\r\n");
 	if (exit_on_escape)
 		VERBOSE("Use '<Enter>~.' sequence to exit.\r\n");
 
