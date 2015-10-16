@@ -1,3 +1,9 @@
+sterm (20151016) unstable; urgency=medium
+
+  * Add command mode
+
+ -- Michal Sojka <sojkam1@fel.cvut.cz>  Fri, 16 Oct 2015 12:53:15 +0200
+
 sterm (20150821) unstable; urgency=medium
 
   * Fix Makefile to work on Ubuntu Precise
