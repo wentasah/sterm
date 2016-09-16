@@ -1,0 +1,75 @@
+.\" vim: ft=groff
+.\" Manpage for sterm.
+.TH man 1 "16 September 2016" "16102015"
+.SH NAME
+sterm \- simple serial terminal
+.SH SYNOPSIS
+sterm [OPTION]... DEVICE
+.SH DESCRIPTION
+.PP
+sterm is simple program for accessing serial devices/console. Can be used in
+scripts or directly as interactive terminal. It also allows control of additional
+pins (DTR and RTS) on top of standard ones.
+.PP
+In interactive mode all keys are send trough serial connection, including '^C'. So
+to exit this program there is special keystroke series to exit: '~.'
+.SH OPTIONS
+.TP
+\fB\-c\fR, \fB\-\-all\fR
+Enter command mode. See command mode section for details on what command mode is
+and how to use it.
+.TP
+\fB\-d[PULSE]\fR
+Make pulse on DTR. You must specify length of the pulse and its polarity, see
+following section for more details.
+.TP
+\fB\-e\fR
+Ignore '~.' escape sequence. Be aware that this locks your terminal to sterm,
+only way is to kill it from other terminal. But this can be desirable in scripts,
+specially if you are sending binary data trough serial terminal.
+.TP
+\fB\-n\fR
+Don't switch the device to raw mode.
+.TP
+\fB\-r[PULSE]\fR
+Make pulse on RTS. You must specify length of the pulse and its polarity, see
+following section for more details.
+.TP
+\fB\-s <baudrate>\fR
+Specifies baudrate in which serial device will be switched at start of sterm.
+Here are few common values: 4800, 9600, 19200, 115200. For full list of supported
+baudrates see source files or test what is acceptable.
+
+.SH PULSE
+For arguments controlling DTR and RTS you can optionally specify number which sets
+length of pulse and its polarity. Length of the pulse in milliseconds is absolute
+value of specified number and sign, which can be either '+' or '-', corresponds
+to positive or negative polarity. If sign is given without any number, then it
+generates one millisecond pulse of given polarity.
+
+.SH COMMAND MODE
+Command mode allows you to generate arbitrary combinations of pulses with DTR and
+RTS pins. You can input white character (space, new line) separated following
+commands.
+
+.I dtr PULSE
+.RS
+Generates pulse on DTR. For details on PULSE see previous section.
+.RE
+.I rts PULSE
+.RS
+Generates pulse on RTS. For details on PULSE see previous section.
+.RE
+.I go
+.RS
+Exits command mode.
+.RE
+
+Any other input in command mode that described commands raises error and causes
+program exit.
+
+.SH BUGS
+No known bugs.
+
+.SH AUTHOR
+Michal Sojka (sojkam1@fel.cvut.cz)
