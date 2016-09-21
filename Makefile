@@ -1,10 +1,7 @@
 CFLAGS = -O2 -Wall
-LDFLAGS = -llockdev
+LDLIBS = -llockdev
 
 all: sterm
-
-%: %.c
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 clean:
 	rm -f sterm
