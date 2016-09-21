@@ -92,5 +92,9 @@ program to exit.
 .SH BUGS
 No known bugs.
 
+.SH SEE ALSO
+.BR minicom (1),
+.BR cu (1),
+.BR gtkterm (1).
 .SH AUTHOR
 Michal Sojka (sojkam1@fel.cvut.cz)
