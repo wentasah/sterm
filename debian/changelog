@@ -1,3 +1,13 @@
+sterm (20160921) unstable; urgency=medium
+
+  [ Karel Kočí ]
+  * Add manual page
+
+  [ Michal Sojka ]
+  * Fix/clarify/extend the man page
+
+ -- Michal Sojka <sojkam1@fel.cvut.cz>  Wed, 21 Sep 2016 16:15:32 +0200
+
 sterm (20151016) unstable; urgency=medium
 
   * Add command mode
