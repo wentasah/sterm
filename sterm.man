@@ -1,72 +1,93 @@
 .\" vim: ft=groff
 .\" Manpage for sterm.
-.TH man 1 "16 September 2016" "16102015"
+.TH sterm 1 "16 September 2016" "16102015"
 .SH NAME
 sterm \- simple serial terminal
 .SH SYNOPSIS
 sterm [OPTION]... DEVICE
 .SH DESCRIPTION
 .PP
-sterm is simple program for accessing serial devices/console. Can be used in
-scripts or directly as interactive terminal. It also allows control of additional
-pins (DTR and RTS) on top of standard ones.
+sterm is simple program for communication over serial line. It can be
+used in scripts or directly as interactive terminal. It also allows to
+control DTR and RTS signals with command line options.
 .PP
-In interactive mode all keys are send trough serial connection, including '^C'. So
-to exit this program there is special keystroke series to exit: '~.'
+In interactive mode all keys (including '^C') are sent trough the
+serial connection. To exit the program there is special key
+sequence: '<Enter>~.'
 .SH OPTIONS
 .TP
-\fB\-c\fR, \fB\-\-all\fR
-Enter command mode. See command mode section for details on what command mode is
-and how to use it.
+\fB\-c\fR
+Enter command mode. See COMMAND MODE section below.
 .TP
 \fB\-d[PULSE]\fR
-Make pulse on DTR. You must specify length of the pulse and its polarity, see
-following section for more details.
+Make pulse on DTR. The PULSE parameter (see below) specifies the
+length of the pulse and its polarity.
 .TP
 \fB\-e\fR
-Ignore '~.' escape sequence. Be aware that this locks your terminal to sterm,
-only way is to kill it from other terminal. But this can be desirable in scripts,
-specially if you are sending binary data trough serial terminal.
+Ignore '~.' escape sequence. Be aware that this locks your terminal to
+sterm, the only way to exit sterm is is to kill it from other
+terminal. This can be desirable in scripts, specially if you are
+sending binary data trough serial terminal.
 .TP
 \fB\-n\fR
-Don't switch the device to raw mode.
+Don't switch user's terminal to raw mode. This is useful if you want
+to use '^C' to exit sterm or to use line buffering/editing features of
+TTYs.
 .TP
 \fB\-r[PULSE]\fR
-Make pulse on RTS. You must specify length of the pulse and its polarity, see
-following section for more details.
+Make pulse on RTS. The PULSE parameter (see below) specifies the
+length of the pulse and its polarity.
 .TP
 \fB\-s <baudrate>\fR
-Specifies baudrate in which serial device will be switched at start of sterm.
-Here are few common values: 4800, 9600, 19200, 115200. For full list of supported
+Set serial like baudrate to the given value. Here are few common
+values: 4800, 9600, 19200, 115200. For full list of supported
 baudrates see source files or test what is acceptable.
 
 .SH PULSE
-For arguments controlling DTR and RTS you can optionally specify number which sets
-length of pulse and its polarity. Length of the pulse in milliseconds is absolute
-value of specified number and sign, which can be either '+' or '-', corresponds
-to positive or negative polarity. If sign is given without any number, then it
-generates one millisecond pulse of given polarity.
+
+Options \fB\-d\fR and \fB\-r\fR take an optional argument PULSE that
+specifies pulse length and polarity. PULSE can be one of the
+following:
+
+a number
+.RS
+Absolute value of the number specifies the length of the pulse in
+milliseconds and sign, which can be either '+' or '-', corresponds to
+positive or negative polarity.
+.RE
+
+\'+' or '-'
+.RS
+This corresponds to +1 and -1.
+.RE
+
+empty
+.RS
+This corresponds -1.
+.RE
 
 .SH COMMAND MODE
-Command mode allows you to generate arbitrary combinations of pulses with DTR and
-RTS pins. You can input white character (space, new line) separated following
-commands.
+Command mode allows you to generate arbitrary combinations of pulses
+on DTR and RTS signals. The commands are read from standard input and
+are white-space separated. The following commands are understood.
 
 .I dtr PULSE
 .RS
-Generates pulse on DTR. For details on PULSE see previous section.
+Generate a pulse on DTR. The PULSE argument is described in PULSE
+section.
 .RE
 .I rts PULSE
 .RS
-Generates pulse on RTS. For details on PULSE see previous section.
+Generate a pulse on RTS. The PULSE argument is described in PULSE
+section.
 .RE
 .I go
 .RS
-Exits command mode.
+Exit command mode and enter normal sterm operation.
 .RE
 
-Any other input in command mode that described commands raises error and causes
-program exit.
+Any other input in the command mode raises an error and causes the
+program to exit.
 
 .SH BUGS
 No known bugs.
