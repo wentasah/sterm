@@ -1,7 +1,7 @@
 /*
  * Simple serial terminal
  *
- * Copyright 2014, 2015 Michal Sojka <sojkam1@fel.cvut.cz>
+ * Copyright 2014, 2015, 2016 Michal Sojka <sojkam1@fel.cvut.cz>
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -30,6 +30,7 @@
  */
 
 #define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
