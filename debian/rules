@@ -19,6 +19,7 @@ include /usr/share/dpkg/default.mk
 # Variables to pass to sterm Makefile
 export PREFIX=/usr
 export NO_MAN=1
+export INSTALL=install # Do not strip - this will be handled by dh_strip
 
 # main packaging script based on dh7 syntax
 %:
