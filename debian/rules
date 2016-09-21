@@ -16,6 +16,9 @@ include /usr/share/dpkg/default.mk
 # package maintainers to append LDFLAGS
 #export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
+# Variables to pass to sterm Makefile
+export PREFIX=/usr
+export NO_MAN=1
 
 # main packaging script based on dh7 syntax
 %:
