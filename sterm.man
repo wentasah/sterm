@@ -43,6 +43,9 @@ Set serial like baudrate to the given value. Here are few common
 values: 4800, 9600, 19200, 115200. For full list of supported
 baudrates see source files or test what is acceptable.
 
+.TP
+\fB\-v\fR
+Be verbose.
 .SH PULSE
 
 Options \fB\-d\fR and \fB\-r\fR take an optional argument PULSE that

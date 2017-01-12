@@ -1,7 +1,7 @@
 /*
  * Simple serial terminal
  *
- * Copyright 2014, 2015, 2016 Michal Sojka <sojkam1@fel.cvut.cz>
+ * Copyright 2014, 2015, 2016, 2017 Michal Sojka <sojkam1@fel.cvut.cz>
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -132,6 +132,7 @@ void usage(const char* argv0)
 		"  -n        do not switch the device to raw mode\n"
 		"  -r[PULSE] make pulse on RTS\n"
 		"  -s <baudrate>\n"
+		"  -v        verbose mode\n"
 		"\n"
 		"PULSE is a number specifying the pulse. Absolute value defines the\n"
 		"length of the pulse in milliseconds, sign determines the polarity of\n"
