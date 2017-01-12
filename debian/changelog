@@ -1,3 +1,9 @@
+sterm (20170112) unstable; urgency=medium
+
+  * Document -v option (verbose)
+
+ -- Michal Sojka <sojkam1@fel.cvut.cz>  Thu, 12 Jan 2017 17:38:29 +0100
+
 sterm (20160921) unstable; urgency=medium
 
   [ Karel Kočí ]
