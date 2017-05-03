@@ -31,6 +31,7 @@
 
 #define _BSD_SOURCE
 #define _DEFAULT_SOURCE
+#define _GNU_SOURCE
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -44,6 +45,7 @@
 #include <string.h>
 #include <signal.h>
 #include <lockdev.h>
+#include <errno.h>
 
 #define STRINGIFY(val) #val
 #define TOSTRING(val) STRINGIFY(val)
@@ -269,7 +271,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s is used by PID %d\n", dev, pid);
 		exit(1);
 	} else if (pid < 0) {
-		perror("dev_lock()");
+		char *msg;
+		asprintf(&msg, "dev_lock('%s')", dev); /* No free() because we exit() immediately */
+		if (errno)
+			perror(msg);
+		else
+			fprintf(stderr, "%s: Error\n", msg);
 		exit(1);
 	}
 	atexit(unlock);
