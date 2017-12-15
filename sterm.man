@@ -93,6 +93,10 @@ section.
 Send break signal of given duration. See
 .BR tcsendbreak (3).
 .RE
+.I exit
+.RS
+Exit sterm.
+.RE
 .I go
 .RS
 Exit command mode and enter normal sterm operation.

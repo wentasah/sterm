@@ -191,6 +191,8 @@ void handle_commands(int fd)
 			CHECK(tcsendbreak(fd, num));
 		else if (strcmp(command, "go\n") == 0)
 			break;
+		else if (strcmp(command, "exit\n") == 0)
+			exit(0);
 		else {
 			fprintf(stderr, "Unknown command: %s\n", command);
 			exit(1);
