@@ -44,7 +44,10 @@
 #include <stdbool.h>
 #include <string.h>
 #include <signal.h>
+#ifdef HAVE_LOCKDEV
 #include <lockdev.h>
+#endif
+#include <sys/file.h>
 #include <errno.h>
 
 #define STRINGIFY(val) #val
@@ -74,10 +77,12 @@ void restore_stdin_term()
 	tcsetattr(0, TCSANOW, &stdin_tio_backup);
 }
 
+#ifdef HAVE_LOCKDEV
 void unlock()
 {
 	dev_unlock(dev, getpid());
 }
+#endif
 
 void sighandler(int arg)
 {
@@ -266,6 +271,7 @@ int main(int argc, char *argv[])
 	signal(SIGTERM, sighandler);
 	signal(SIGHUP, sighandler);
 
+#ifdef HAVE_LOCKDEV
 	pid_t pid = dev_lock(dev);
 	if (pid > 0) {
 		fprintf(stderr, "%s is used by PID %d\n", dev, pid);
@@ -280,6 +286,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	atexit(unlock);
+#endif
 
 	/* O_NONBLOCK is needed to not wait for the CDC signal. See tty_ioctl(4). */
 	if ((fd = open(dev, O_RDWR|O_NOCTTY|O_NONBLOCK)) < 0) {
@@ -289,6 +296,8 @@ int main(int argc, char *argv[])
         /* Cancel the efect of O_NONBLOCK flag. */
 	int n = fcntl(fd, F_GETFL, 0);
         fcntl(fd, F_SETFL, n & ~O_NDELAY);
+
+	flock(fd, LOCK_EX);
 
 	if (isatty(fd)) {
 		CHECK(ioctl(fd, TIOCEXCL, NULL));

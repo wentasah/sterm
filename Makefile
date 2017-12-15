@@ -1,5 +1,8 @@
 CFLAGS = -O2 -Wall -g
+
+ifneq ($(findstring HAVE_LOCKDEV,$(CFLAGS)),)
 LDLIBS = -llockdev
+endif
 
 PREFIX ?= /usr/local
 INSTALL ?= install
