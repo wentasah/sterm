@@ -1,3 +1,15 @@
+sterm (20171215) unstable; urgency=medium
+
+  [ Karel Kočí ]
+  * Add completions for bash and zsh
+
+  [ Michal Sojka ]
+  * Make liblockdev optional and use flock
+  * Allow sending break signal
+  * Implement exit command in command mode
+
+ -- Michal Sojka <sojkam1@fel.cvut.cz>  Fri, 15 Dec 2017 13:00:42 +0100
+
 sterm (20170112) unstable; urgency=medium
 
   * Document -v option (verbose)
