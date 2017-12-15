@@ -133,6 +133,7 @@ void usage(const char* argv0)
 	fprintf(stderr, "Usage: %s [options] <device>\n", argv0);
 	fprintf(stderr,
 		"Options:\n"
+		"  -b <duration> send break signal\n"
 		"  -c        enter command mode\n"
 		"  -d[PULSE] make pulse on DTR\n"
 		"  -e        ignore '~.' escape sequence\n"
@@ -176,6 +177,7 @@ void handle_commands(int fd)
 
 	while (!go) {
 		char *p1 = NULL;
+		int num;
 		if (fgets(command, sizeof(command), stdin) == NULL) {
 			if (!feof(stdin))
 			    perror("Command read");
@@ -185,6 +187,8 @@ void handle_commands(int fd)
 			pulse(fd, dtr_rts_arg('d', p1), 0);
 		else if (sscanf(command, "rts %ms", &p1) == 1)
 			pulse(fd, 0, dtr_rts_arg('r', p1));
+		else if (sscanf(command, "break %d", &num) == 1)
+			CHECK(tcsendbreak(fd, num));
 		else if (strcmp(command, "go\n") == 0)
 			break;
 		else {
@@ -206,14 +210,16 @@ int main(int argc, char *argv[])
 	bool stdin_tty;
 	bool raw = true;
 	bool cmd = false;
+	int break_dur = -1;
 
 	if ((stdin_tty = isatty(0))) {
 		CHECK(tcgetattr(0, &stdin_tio_backup));
 		atexit(restore_stdin_term);
 	}
 
-	while ((opt = getopt(argc, argv, "cnd::er::s:v")) != -1) {
+	while ((opt = getopt(argc, argv, "b:cnd::er::s:v")) != -1) {
 		switch (opt) {
+		case 'b': break_dur = atoi(optarg); break;
 		case 'c': cmd = true; break;
 		case 'd': dtr = dtr_rts_arg(opt, optarg); break;
 		case 'e': exit_on_escape = false; break;
@@ -313,6 +319,9 @@ int main(int argc, char *argv[])
 
 		if (dtr || rts)
 			pulse(fd, dtr, rts);
+
+		if (break_dur != -1)
+			CHECK(tcsendbreak(fd, break_dur));
 
 		 /* Disable flow control */
 		tio.c_cflag &= ~(CRTSCTS);

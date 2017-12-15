@@ -8,7 +8,7 @@ _sterm() {
 	#cur="${COMP_WORDS[COMP_CWORD]}"
 	local ops="-h --help -c -d -e -n -r -s -v"
 	case "$prev" in
-		-d|-r)
+		-b|-d|-r)
 			# No completion for these
 			;;
 		-s)

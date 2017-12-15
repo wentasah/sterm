@@ -16,6 +16,10 @@ serial connection. To exit the program there is special key
 sequence: '<Enter>~.'
 .SH OPTIONS
 .TP
+\fB\-b <duration>\fR
+Send break signal of given DURATION after opening the DEVICE. See
+tcsendbreak(3) for definition of duration.
+.TP
 \fB\-c\fR
 Enter command mode. See COMMAND MODE section below.
 .TP
@@ -83,6 +87,11 @@ section.
 .RS
 Generate a pulse on RTS. The PULSE argument is described in PULSE
 section.
+.RE
+.I break DURATION
+.RS
+Send break signal of given duration. See
+.BR tcsendbreak (3).
 .RE
 .I go
 .RS

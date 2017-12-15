@@ -6,6 +6,7 @@ _sterm_defs() {
 		"--help[Output help message]" \
 		"-h[Print help text]" \
 		"-s[Set baudrate]" \
+		"-b[Send break]" \
 		"-c[Enter command mode]" \
 		"-d[Make pulse on DTR]" \
 		"-r[Make pulse on RTS]" \
@@ -19,7 +20,7 @@ _sterm() {
 	if (( CURRENT > 2)); then
 		local prev=${words[(( CURRENT - 1))]}
 		case "${prev}" in
-			-d|-r)
+			-b|-d|-r)
 				# No completion for these
 				;;
 			-s)
