@@ -6,6 +6,7 @@ endif
 
 PREFIX ?= /usr/local
 INSTALL ?= install
+INSTALL_BIN ?= install -s
 
 all: sterm
 
@@ -14,7 +15,7 @@ clean:
 
 install: all
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/bin
-	$(INSTALL) -s -m 755 sterm $(DESTDIR)$(PREFIX)/bin
+	$(INSTALL_BIN) -m 755 sterm $(DESTDIR)$(PREFIX)/bin
 ifneq ($(NO_MAN),1)
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/man/man1
 	$(INSTALL) -m 644 sterm.man $(DESTDIR)$(PREFIX)/share/man/man1/sterm.1
