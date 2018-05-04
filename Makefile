@@ -27,3 +27,10 @@ ifneq ($(NO_COMP),1)
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/zsh/functions/Completion/Unix/
 	$(INSTALL) -m 644 completion.zsh $(DESTDIR)$(PREFIX)/share/zsh/functions/Completion/Unix/_sterm
 endif
+
+deb:
+	sbuild
+
+# Deb cross-building (% stands for debian architecture such as armhf)
+deb-%:
+	sbuild --host=$* --add-depends=libc-dev:$* --build-failed-commands='%s'
