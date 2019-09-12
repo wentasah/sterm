@@ -1,7 +1,7 @@
 /*
  * Simple serial terminal
  *
- * Copyright 2014, 2015, 2016, 2017 Michal Sojka <sojkam1@fel.cvut.cz>
+ * Copyright 2014, 2015, 2016, 2017, 2019 Michal Sojka <sojkam1@fel.cvut.cz>
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -372,6 +372,10 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "Not all data written to %s (%d/%d)\n", dev, r1, r2);
 				exit(1);
 			}
+		}
+		if (fds[0].revents & POLLHUP) {
+			VERBOSE("HUP on stdin\r\n");
+			break;
 		}
 		if (fds[1].revents & POLLIN) {
 			r1 = CHECK(read(fd, buf, sizeof(buf)));
