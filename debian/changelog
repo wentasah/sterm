@@ -1,3 +1,9 @@
+sterm (20190912) unstable; urgency=medium
+
+  * Handle hang-up event on stdin
+
+ -- Michal Sojka <michal.sojka@cvut.cz>  Thu, 12 Sep 2019 21:49:50 +0200
+
 sterm (20171215) unstable; urgency=medium
 
   [ Karel Kočí ]
