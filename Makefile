@@ -34,3 +34,9 @@ deb:
 # Deb cross-building (% stands for debian architecture such as armhf)
 deb-%:
 	sbuild --host=$* --add-depends=libc-dev:$* --build-failed-commands='%s'
+
+release:
+	gbp dch --release -N $(shell date +%Y%m%d) --commit
+	gbp buildpackage --git-tag -b
+	debrelease rtime
+	git push --follow-tags
