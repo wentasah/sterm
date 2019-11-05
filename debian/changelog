@@ -1,3 +1,13 @@
+sterm (20191105) unstable; urgency=medium
+
+  [ Michal Sojka ]
+  * Support baudrates up to 4 Mbps
+
+  [ Jan Kaisrlik ]
+  * extend zsh and bash completion by newly added baudrates
+
+ -- Michal Sojka <michal.sojka@cvut.cz>  Tue, 05 Nov 2019 23:33:43 +0100
+
 sterm (20190912) unstable; urgency=medium
 
   * Handle hang-up event on stdin
