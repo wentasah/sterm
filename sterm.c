@@ -137,7 +137,7 @@ void usage(const char* argv0)
 		"  -c        enter command mode\n"
 		"  -d[PULSE] make pulse on DTR\n"
 		"  -e        ignore '~.' escape sequence\n"
-		"  -n        do not switch the device to raw mode\n"
+		"  -n        do not switch stdin TTY to raw mode\n"
 		"  -r[PULSE] make pulse on RTS\n"
 		"  -s <baudrate>\n"
 		"  -v        verbose mode\n"
