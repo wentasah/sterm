@@ -6,7 +6,7 @@ _sterm() {
 	_init_completion || return
 	COMPREPLY=()
 	#cur="${COMP_WORDS[COMP_CWORD]}"
-	local ops="-h --help -c -d -e -n -r -s -v"
+	local ops="-h --help -c -d -e -n -r -s -t -v"
 	case "$prev" in
 		-b|-d|-r)
 			# No completion for these

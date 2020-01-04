@@ -12,6 +12,7 @@ _sterm_defs() {
 		"-r[Make pulse on RTS]" \
 		"-e[Ignore '~.' escape sequence]" \
 		"-n[Do not switch stdin to raw mode]" \
+		"-t[Delay \[ms\] between transmitted characters]" \
 		"-v[Verbose mode]"
 	_path_files
 }
@@ -20,7 +21,7 @@ _sterm() {
 	if (( CURRENT > 2)); then
 		local prev=${words[(( CURRENT - 1))]}
 		case "${prev}" in
-			-b|-d|-r)
+			-b|-d|-r|-t)
 				# No completion for these
 				;;
 			-s)
