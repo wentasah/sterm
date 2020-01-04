@@ -352,11 +352,12 @@ int main(int argc, char *argv[])
 	if (cmd)
 		handle_commands(fd);
 
+
+	enum { STDIN, DEV };
 	struct pollfd fds[2] = {
-		{ .fd = 0,  .events = POLLIN },
-		{ .fd = fd, .events = POLLIN },
+		[STDIN] = { .fd = STDIN_FILENO,  .events = POLLIN },
+		[DEV]   = { .fd = fd,            .events = POLLIN },
 	};
-	char buf[4096];
 
 	if (stdin_tty) {
 		tio = stdin_tio_backup;
@@ -368,36 +369,38 @@ int main(int argc, char *argv[])
 	if (exit_on_escape)
 		VERBOSE("Use '<Enter>~.' sequence to exit.\r\n");
 
+	char buf[4096];
 	while (1) {
-		int r1, r2;
-		CHECK(poll(fds, 2, -1));
-		if (fds[0].revents & POLLIN) {
-			r1 = CHECK(read(0, buf, sizeof(buf)));
-			if (r1 == 0) {
+		int rlen, wlen;
+		int timeout = -1;
+		CHECK(poll(fds, 2, timeout));
+		if (fds[STDIN].revents & POLLIN) {
+			rlen = CHECK(read(STDIN_FILENO, buf, sizeof(buf)));
+			if (rlen == 0) {
 				VERBOSE("EOF on stdin\r\n");
 				break;
 			}
 			if (exit_on_escape)
-				exit_on_escapeseq(buf, r1);
-			r2 = CHECK(write(fd, buf, r1));
-			if (r1 != r2) {
-				fprintf(stderr, "Not all data written to %s (%d/%d)\n", dev, r1, r2);
+				exit_on_escapeseq(buf, rlen);
+			wlen = CHECK(write(fd, buf, rlen));
+			if (rlen != wlen) {
+				fprintf(stderr, "Not all data written to %s (%d/%d)\n", dev, rlen, wlen);
 				exit(1);
 			}
 		}
-		if (fds[0].revents & POLLHUP) {
+		if (fds[STDIN].revents & POLLHUP) {
 			VERBOSE("HUP on stdin\r\n");
 			break;
 		}
-		if (fds[1].revents & POLLIN) {
-			r1 = CHECK(read(fd, buf, sizeof(buf)));
-			if (r1 == 0) {
+		if (fds[DEV].revents & POLLIN) {
+			rlen = CHECK(read(fd, buf, sizeof(buf)));
+			if (rlen == 0) {
 				VERBOSE("EOF on %s\r\n", dev);
 				break;
 			}
-			r2 = CHECK(write(1, buf, r1));
-			if (r1 != r2) {
-				fprintf(stderr, "Not all data written to stdout (%d/%d)\n", r1, r2);
+			wlen = CHECK(write(STDOUT_FILENO, buf, rlen));
+			if (rlen != wlen) {
+				fprintf(stderr, "Not all data written to stdout (%d/%d)\n", wlen, rlen);
 				exit(1);
 			}
 		}
