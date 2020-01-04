@@ -114,12 +114,35 @@ int dtr_rts_arg(const char option, const char *optarg)
 	return val;
 }
 
+// See DSR and CPR at
+// https://en.wikipedia.org/wiki/ANSI_escape_code#Terminal_output_sequences
+bool is_cpr_control_seq(char c)
+{
+	static enum state { CSI_ESC, CSI_BRACKET, PAR_N, PAR_M, FIN_R } state;
+
+	switch (state) {
+	case CSI_ESC:      state = (c == 0x1b) ? CSI_BRACKET : CSI_ESC; break;
+	case CSI_BRACKET:  state = (c == '[')  ? PAR_N : CSI_ESC; break;
+	case PAR_N:        state = (c == ';')  ? PAR_M : (c >= '0' && c <= '9' ? PAR_N : CSI_ESC); break;
+	case PAR_M:        state = (c == 'R')  ? FIN_R : (c >= '0' && c <= '9' ? PAR_M : CSI_ESC); break;
+	case FIN_R: break;
+	}
+	if (state == FIN_R) {
+		state = CSI_ESC;
+		return true;
+
+	} else
+		return state != CSI_ESC;
+}
+
 void exit_on_escapeseq(const char *buf, int len)
 {
 	static const char escseq[] = "\r~.";
 	static const char *state = escseq+1;
 	int i;
 	for (i = 0; i < len; i++) {
+		if (is_cpr_control_seq(buf[i]))
+			continue;
 		if (buf[i] == *state) {
 			state++;
 			if (*state == 0)
