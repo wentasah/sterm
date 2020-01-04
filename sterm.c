@@ -1,7 +1,7 @@
 /*
  * Simple serial terminal
  *
- * Copyright 2014, 2015, 2016, 2017, 2019 Michal Sojka <sojkam1@fel.cvut.cz>
+ * Copyright 2014, 2015, 2016, 2017, 2019, 2020 Michal Sojka <sojkam1@fel.cvut.cz>
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -42,12 +42,14 @@
 #include <getopt.h>
 #include <poll.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <signal.h>
 #ifdef HAVE_LOCKDEV
 #include <lockdev.h>
 #endif
 #include <sys/file.h>
+#include <time.h>
 #include <errno.h>
 
 #define STRINGIFY(val) #val
@@ -57,6 +59,8 @@
 #define CHECKNULL(cmd) ({ void *ptr = (cmd); if (ptr == NULL) { perror(#cmd " line " TOSTRING(__LINE__)); exit(1); }; ptr; })
 
 #define VERBOSE(format, ...) do { if (verbose) fprintf(stderr, "sterm: " format, ##__VA_ARGS__); } while (0)
+
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 bool verbose = false;
 bool exit_on_escape = true;
@@ -140,6 +144,7 @@ void usage(const char* argv0)
 		"  -n        do not switch stdin TTY to raw mode\n"
 		"  -r[PULSE] make pulse on RTS\n"
 		"  -s <baudrate>\n"
+		"  -t <ms>   minimum delay between two transmitted characters\n"
 		"  -v        verbose mode\n"
 		"\n"
 		"PULSE is a number specifying the pulse. Absolute value defines the\n"
@@ -202,6 +207,13 @@ void handle_commands(int fd)
 	}
 }
 
+static int64_t now_us()
+{
+	struct timespec ts;
+	CHECK(clock_gettime(CLOCK_MONOTONIC, &ts));
+	return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+}
+
 int main(int argc, char *argv[])
 {
 	int fd;
@@ -213,13 +225,14 @@ int main(int argc, char *argv[])
 	bool raw = true;
 	bool cmd = false;
 	int break_dur = -1;
+	int tx_delay_ms = 0;
 
 	if ((stdin_tty = isatty(0))) {
 		CHECK(tcgetattr(0, &stdin_tio_backup));
 		atexit(restore_stdin_term);
 	}
 
-	while ((opt = getopt(argc, argv, "b:cnd::er::s:v")) != -1) {
+	while ((opt = getopt(argc, argv, "b:cnd::er::s:vt:")) != -1) {
 		switch (opt) {
 		case 'b': break_dur = atoi(optarg); break;
 		case 'c': cmd = true; break;
@@ -269,6 +282,9 @@ int main(int argc, char *argv[])
 			}
 			break;
 		}
+		case 't':
+			tx_delay_ms = atoi(optarg);
+			break;
 		case 'v':
 			verbose = true;
 			break;
@@ -369,30 +385,55 @@ int main(int argc, char *argv[])
 	if (exit_on_escape)
 		VERBOSE("Use '<Enter>~.' sequence to exit.\r\n");
 
-	char buf[4096];
+	char buf2dev[4096];
+	int buf_len = 0, buf_idx = 0;
+	int64_t last_tx_us = 0;
 	while (1) {
-		int rlen, wlen;
-		int timeout = -1;
+		int timeout = (tx_delay_ms == 0 || buf_len == 0)
+			? -1
+			: MAX(0, tx_delay_ms - (now_us() - last_tx_us) / 1000);
+
 		CHECK(poll(fds, 2, timeout));
-		if (fds[STDIN].revents & POLLIN) {
-			rlen = CHECK(read(STDIN_FILENO, buf, sizeof(buf)));
-			if (rlen == 0) {
+		if (fds[STDIN].revents & POLLIN && buf_len == 0) {
+			buf_len = CHECK(read(STDIN_FILENO, buf2dev, sizeof(buf2dev)));
+			if (buf_len == 0) {
 				VERBOSE("EOF on stdin\r\n");
 				break;
 			}
+			buf_idx = 0;
 			if (exit_on_escape)
-				exit_on_escapeseq(buf, rlen);
-			wlen = CHECK(write(fd, buf, rlen));
-			if (rlen != wlen) {
-				fprintf(stderr, "Not all data written to %s (%d/%d)\n", dev, rlen, wlen);
+				exit_on_escapeseq(buf2dev, buf_len);
+		}
+		if (buf_len > 0) {
+			int wlen = 0;
+			bool short_write = false;
+			if (tx_delay_ms == 0) {
+				wlen = CHECK(write(fd, buf2dev, buf_len));
+				short_write = wlen != buf_len;
+
+			} else {
+				int64_t now = now_us();
+				if (now - last_tx_us >= tx_delay_ms * 1000) {
+					wlen = CHECK(write(fd, &buf2dev[buf_idx], 1));
+					short_write = wlen != 1;
+					last_tx_us = now;
+				}
+			}
+			if (short_write) {
+				fprintf(stderr, "Not all data written to %s (%d/%d)\n", dev, buf_len, wlen);
 				exit(1);
 			}
+			buf_idx += wlen;
+			if (buf_idx >= buf_len)
+				buf_len = 0;
 		}
 		if (fds[STDIN].revents & POLLHUP) {
 			VERBOSE("HUP on stdin\r\n");
 			break;
 		}
 		if (fds[DEV].revents & POLLIN) {
+			char buf[1024];
+			int rlen, wlen;
 			rlen = CHECK(read(fd, buf, sizeof(buf)));
 			if (rlen == 0) {
 				VERBOSE("EOF on %s\r\n", dev);
