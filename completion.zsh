@@ -11,7 +11,7 @@ _sterm_defs() {
 		"-d[Make pulse on DTR]" \
 		"-r[Make pulse on RTS]" \
 		"-e[Ignore '~.' escape sequence]" \
-		"-n[Do not switch the device to raw mode]" \
+		"-n[Do not switch stdin to raw mode]" \
 		"-v[Verbose mode]"
 	_path_files
 }
