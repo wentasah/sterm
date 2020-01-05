@@ -12,7 +12,7 @@ used in scripts or directly as interactive terminal. It also allows to
 control DTR and RTS signals with command line options.
 .PP
 In interactive mode all keys (including '^C') are sent trough the
-serial connection. To exit the program there is special key
+serial connection. To exit the program there is a special key
 sequence: '<Enter>~.'
 .SH OPTIONS
 .TP
@@ -29,9 +29,9 @@ length of the pulse and its polarity.
 .TP
 \fB\-e\fR
 Ignore '~.' escape sequence. Be aware that this locks your terminal to
-sterm, the only way to exit sterm is is to kill it from other
+sterm, the only way to exit sterm is to kill it from other
 terminal. This can be desirable in scripts, specially if you are
-sending binary data trough serial terminal.
+sending binary data through serial connection.
 .TP
 \fB\-n\fR
 Don't switch user's terminal to raw mode. This is useful if you want
@@ -50,7 +50,7 @@ baudrates see source files or test what is acceptable.
 \fB\-t <ms>\fR
 Enforce minimum delay of MS milliseconds between transmitting any two
 characters to the serial line. This is useful when talking to devices,
-which loose charactes sent at full speed, e.g. after copy&paste
+which loose characters sent at full speed, e.g. after copy&paste
 operation.
 
 .TP
