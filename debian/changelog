@@ -1,3 +1,24 @@
+sterm (20200306) unstable; urgency=medium
+
+  * Fix usage text about the -n option
+  * Allow enforcing minimum delay between transmitted characters
+  * Ignore CPR ANSI control sequence in exit_on_escapeseq()
+  * Few fixes in the man page
+
+ -- Michal Sojka <michal.sojka@cvut.cz>  Fri, 06 Mar 2020 18:25:41 +0100
+
+sterm (20200306) unstable; urgency=medium
+
+  * Fix usage text about the -n option
+  * Minor refactoring
+  * Allow enforcing minimum delay between transmitted characters
+  * Ignore CPR ANSI control sequence in exit_on_escapeseq()
+  * fixup! Fix usage text about the -n option
+  * Teach shell completions about the -t option
+  * Few fixes in the man page
+
+ -- Michal Sojka <michal.sojka@cvut.cz>  Fri, 06 Mar 2020 18:25:02 +0100
+
 sterm (20191105) unstable; urgency=medium
 
   [ Michal Sojka ]
