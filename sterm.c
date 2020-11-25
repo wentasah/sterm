@@ -64,6 +64,7 @@
 
 bool verbose = false;
 bool exit_on_escape = true;
+bool break_on_ctrl_x = true;
 
 struct termios stdin_tio_backup;
 char *dev = NULL;
@@ -153,6 +154,16 @@ void exit_on_escapeseq(const char *buf, int len)
 				state++;
 		}
 	}
+}
+
+bool contains_ctrl_x(const char *buf, int len)
+{
+	int i;
+	for (i = 0; i < len; i++) {
+		if (buf[i] == 24) /* Ctrl-X */
+			return true;
+	}
+	return false;
 }
 
 void usage(const char* argv0)
@@ -426,6 +437,11 @@ int main(int argc, char *argv[])
 			buf_idx = 0;
 			if (exit_on_escape)
 				exit_on_escapeseq(buf2dev, buf_len);
+			if (break_on_ctrl_x && break_dur != -1 && contains_ctrl_x(buf2dev, buf_len)) {
+				VERBOSE("Resetting the board\r\n");
+				CHECK(tcsendbreak(fd, break_dur));
+				continue;
+			}
 		}
 		if (buf_len > 0) {
 			int wlen = 0;
