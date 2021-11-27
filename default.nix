@@ -5,6 +5,6 @@
 with pkgs;
 stdenv.mkDerivation {
   name = "sterm";
-  src = builtins.fetchGit { url = ./.; };
+  src = ./.;
   installPhase = "make install PREFIX=$out";
 }
