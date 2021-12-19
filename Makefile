@@ -1,4 +1,4 @@
-CFLAGS = -O2 -Wall -g
+CFLAGS = -O2 -Wall -g -DSTERM_VERSION='"$(shell git describe)"'
 
 ifneq ($(findstring HAVE_LOCKDEV,$(CFLAGS)),)
 LDLIBS = -llockdev

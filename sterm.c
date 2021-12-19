@@ -1,7 +1,7 @@
 /*
  * Simple serial terminal
  *
- * Copyright 2014, 2015, 2016, 2017, 2019, 2020 Michal Sojka <sojkam1@fel.cvut.cz>
+ * Copyright 2014, 2015, 2016, 2017, 2019, 2020, 2021 Michal Sojka <sojkam1@fel.cvut.cz>
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -155,26 +155,29 @@ void exit_on_escapeseq(const char *buf, int len)
 	}
 }
 
-void usage(const char* argv0)
+void print_usage_and_exit(const char* argv0, int exit_code)
 {
-	fprintf(stderr, "Usage: %s [options] <device>\n", argv0);
-	fprintf(stderr,
+	fprintf(exit_code == 0 ? stdout : stderr, "Usage: %s [options] <device>\n", argv0);
+	fprintf(exit_code == 0 ? stdout : stderr,
 		"Options:\n"
 		"  -b <duration> send break signal\n"
 		"  -c        enter command mode\n"
 		"  -d[PULSE] make pulse on DTR\n"
 		"  -e        ignore '~.' escape sequence\n"
+		"  -h, --help  print help and exit\n"
 		"  -n        do not switch stdin TTY to raw mode\n"
 		"  -r[PULSE] make pulse on RTS\n"
 		"  -s <baudrate>\n"
 		"  -t <ms>   minimum delay between two transmitted characters\n"
 		"  -v        verbose mode\n"
+		"  -V, --version  print version and exit\n"
 		"\n"
 		"PULSE is a number specifying the pulse. Absolute value defines the\n"
 		"length of the pulse in milliseconds, sign determines the polarity of\n"
 		"the pulse. Alternatively, PULSE can be either '+' or '-', which\n"
-		"corresponds to +1 or -1.\n"
+		"corresponds to '+1' or '-1'.\n"
 		);
+	exit(exit_code);
 }
 
 void pulse(int fd, int dtr, int rts)
@@ -255,7 +258,14 @@ int main(int argc, char *argv[])
 		atexit(restore_stdin_term);
 	}
 
-	while ((opt = getopt(argc, argv, "b:cnd::er::s:vt:")) != -1) {
+	static struct option long_options[] = {
+		{"help",    no_argument,       0,  'h' },
+		{"version", no_argument,       0,  'V' },
+		{0,         0,                 0,  0   }
+	};
+
+	while ((opt = getopt_long(argc, argv, "b:cnd::er::s:vVt:h",
+				  long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'b': break_dur = atoi(optarg); break;
 		case 'c': cmd = true; break;
@@ -311,9 +321,13 @@ int main(int argc, char *argv[])
 		case 'v':
 			verbose = true;
 			break;
+		case 'V':
+			printf("sterm version %s\n", strlen(STERM_VERSION) > 0 ? STERM_VERSION : "unknown");
+			return 0;
+		case 'h':
+			/* fallthrough */
 		default: /* '?' */
-			usage(argv[0]);
-			exit(1);
+			print_usage_and_exit(argv[0], opt == 'h' ? 0 : 1);
 		}
 	}
 
@@ -322,8 +336,7 @@ int main(int argc, char *argv[])
 
 	if (!dev) {
 		fprintf(stderr, "No device specified\n");
-		usage(argv[0]);
-		exit(1);
+		print_usage_and_exit(argv[0], 1);
 	}
 
 	signal(SIGINT, sighandler);
