@@ -6,5 +6,11 @@ with pkgs;
 stdenv.mkDerivation {
   name = "sterm";
   src = ./.;
-  installPhase = "make install PREFIX=$out";
+  nativeBuildInputs = [ pkgs.installShellFiles ];
+  installPhase = ''
+    make install PREFIX=$out NO_COMP=1
+    installShellCompletion --bash --name sterm completion.bash
+    installShellCompletion --zsh --name _sterm completion.zsh
+  '';
+
 }
