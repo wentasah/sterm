@@ -5,8 +5,9 @@ LDLIBS = -llockdev
 endif
 
 PREFIX ?= /usr/local
+STRIP ?= strip
 INSTALL ?= install
-INSTALL_BIN ?= install -s
+INSTALL_BIN ?= install --strip-program=$(STRIP) -s
 
 all: sterm
 
