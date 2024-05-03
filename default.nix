@@ -11,6 +11,7 @@ stdenv.mkDerivation {
     make install PREFIX=$out NO_COMP=1
     installShellCompletion --bash --name sterm completion.bash
     installShellCompletion --zsh --name _sterm completion.zsh
+    installShellCompletion --fish --name sterm.fish completion.fish
   '';
 
 }
