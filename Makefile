@@ -27,6 +27,8 @@ ifneq ($(NO_COMP),1)
 	$(INSTALL) -m 644 completion.bash $(DESTDIR)$(PREFIX)/share/bash-completion/completions/sterm
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/zsh/functions/Completion/Unix/
 	$(INSTALL) -m 644 completion.zsh $(DESTDIR)$(PREFIX)/share/zsh/functions/Completion/Unix/_sterm
+	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/fish/vendor_completions.d/
+	$(INSTALL) -m 644 completion.fish $(DESTDIR)$(PREFIX)/share/fish/vendor_completions.d/sterm.fish
 endif
 
 deb:
